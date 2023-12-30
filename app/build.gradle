@@ -64,8 +64,7 @@ dependencies {
 
     implementation 'com.google.android.gms:play-services-ads:22.6.0'
 
-    // Adjust Integration
-    // Only add the following dependencies if will use Adjust
-    //implementation 'com.adjust.sdk:adjust-android:4.33.5'
-    // implementation 'com.adjust.sdk:adjust-android-webbridge:4.33.5'
+    // Adjust
+    implementation 'com.adjust.sdk:adjust-android:4.33.5'
+     implementation 'com.adjust.sdk:adjust-android-webbridge:4.33.5'
 }

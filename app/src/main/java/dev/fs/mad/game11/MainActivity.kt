@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -58,6 +57,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var pref: SharedPreferences
     private lateinit var mp: MediaPlayer
+    private lateinit var mpbet: MediaPlayer
+    private lateinit var open: MediaPlayer
     private lateinit var win: MediaPlayer
     private lateinit var bgsound: MediaPlayer
 
@@ -70,6 +71,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var soundon: ImageView
     private lateinit var soundoff: ImageView
 
+    private lateinit var toast : Toast
     var bckExit = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +89,9 @@ class MainActivity : AppCompatActivity() {
         bgsound = MediaPlayer.create(this, R.raw.bgmusic)
         bgsound.isLooping = true
         mp = MediaPlayer.create(this, R.raw.spin)
-        win = MediaPlayer.create(this, R.raw.cheer)
+        mpbet = MediaPlayer.create(this, R.raw.bet)
+        open = MediaPlayer.create(this, R.raw.open)
+        win = MediaPlayer.create(this, R.raw.win)
 
         pref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         firstRun = pref.getBoolean("firstRun", true)
@@ -180,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                         val layout = inflater.inflate(R.layout.win_splash, findViewById(R.id.win_splash))
                         val winCoins = layout.findViewById<TextView>(R.id.win_coins)
                         winCoins.text = gameLogic.getPrize()
-                        val toast = Toast(this@MainActivity)
+                        toast = Toast(this@MainActivity)
                         toast.duration = Toast.LENGTH_SHORT
                         toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0)
                         toast.view = layout
@@ -195,9 +199,11 @@ class MainActivity : AppCompatActivity() {
 
         // Button listeners
         spinButton.setOnClickListener {
-
             spinButton.startAnimation(credAnim)
-
+            if (mp.isPlaying) {
+                mp.stop()
+                mp.prepare()
+            }
             if (playsound == 1) {
                 mp.start()
             }
@@ -213,17 +219,28 @@ class MainActivity : AppCompatActivity() {
             rv3.smoothScrollToPosition(position3)
         }
 
+
+
         plusButton.setOnClickListener {
+            if (mpbet.isPlaying) {
+                mpbet.stop()
+                mpbet.prepare()
+            }
+
             if (playsound == 1) {
-                mp.start()
+                mpbet.start()
             }
             gameLogic.betUp()
             updateText()
         }
 
         minusButton.setOnClickListener {
+            if (mpbet.isPlaying) {
+                mpbet.stop()
+                mpbet.prepare()
+            }
             if (playsound == 1) {
-                mp.start()
+                mpbet.start()
             }
             gameLogic.betDown()
             updateText()
@@ -231,7 +248,7 @@ class MainActivity : AppCompatActivity() {
 
         settingsButton.setOnClickListener {
             if (playsound == 1) {
-                mp.start()
+                open.start()
             }
             showSettingsDialog()
         }
@@ -334,8 +351,9 @@ class MainActivity : AppCompatActivity() {
         music_off = dialog.findViewById(R.id.music_off)
         music_off.setOnClickListener {
             playmusic = 1
-            bgsound.start()
-            recreate()
+            if (!bgsound.isPlaying()) {
+                bgsound.start()
+            }
             dialog.show()
             music_on.visibility = View.VISIBLE
             music_off.visibility = View.INVISIBLE
@@ -357,10 +375,9 @@ class MainActivity : AppCompatActivity() {
         soundoff = dialog.findViewById(R.id.sounds_off)
         soundoff.setOnClickListener {
             playsound = 1
-            recreate()
             dialog.show()
-            soundon.visibility = View.INVISIBLE
-            soundoff.visibility = View.VISIBLE
+            soundon.visibility = View.VISIBLE
+            soundoff.visibility = View.INVISIBLE
             val editor = pref.edit()
             editor.putInt("sound", playsound)
             editor.apply()
@@ -370,10 +387,12 @@ class MainActivity : AppCompatActivity() {
         checksounddraw()
 
         dialog.show()
+
     }
 
     override fun onPause() {
         super.onPause()
+        toast.cancel()
         bgsound.pause()
     }
 
@@ -410,19 +429,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        if (bckExit) {
-            finishAffinity()
-            return
-        }
-        bckExit = true
-        Toast.makeText(this, "Press back again to exit.", Toast.LENGTH_SHORT).show()
-        Handler().postDelayed({ bckExit = false }, 2000)
-    }
-
-
-    override fun onStop() {
-        super.onStop()
-        finishAffinity()
-    }
 }
